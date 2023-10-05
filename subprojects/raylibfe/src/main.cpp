@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <unordered_map>
 
 #include "raylib.h"
 #include "rlgl.h" 
@@ -10,6 +11,23 @@
 // function removed from base library
 // taken from https://github.com/raysan5/raylib/blob/master/examples/models/models_draw_cube_texture.c
 void DrawCubeTexture(Texture2D texture, Vector3 position, float width, float height, float length, Color color);
+bool operator==(Vector3 const& a, Vector3 const& b)
+{
+    return (a.x == b.x) && (a.y == b.y) && (a.z == b.z);
+}
+
+bool operator==(BoundingBox const& a, BoundingBox const& b)
+{
+    return a.min == b.min && a.max == b.max;
+}
+
+struct BBHashFunction
+{
+    std::size_t operator()(const BoundingBox& k) const
+    {
+        return k.min.x + (k.min.y * 10);
+    }
+};
 
 int main(void)
 {
@@ -42,12 +60,26 @@ int main(void)
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
     ur::GameState gs;
+    std::unordered_map<const BoundingBox, ur::coord, BBHashFunction> boundingBoxToBoardSpaceMap;
+    std::vector<BoundingBox> boxes;
+    for(const auto& rosette : gs.settingsPtr->rosettes) {
+        BoundingBox bb;
+        // don't understand why we have to halve for the mins, but if it works it works...
+        bb.min.x = bounds.min.x + (spaceLength / 2 + spaceLength * rosette.x) - spaceLength / 2;
+        bb.min.y = bounds.max.y - spaceLength / 20;
+        bb.min.z = bounds.min.z + (spaceLength / 2 + spaceLength * rosette.y) - spaceLength / 2;
+        bb.max.x = bb.min.x + spaceLength;
+        bb.max.y = bb.min.y + spaceLength / 10;
+        bb.max.z = bb.min.z + spaceLength;
+        boundingBoxToBoardSpaceMap[bb] = rosette;
+        boxes.push_back(bb);
+    }
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
         // Update
         std::ostringstream oss;
-
+        
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
@@ -65,7 +97,17 @@ int main(void)
 
                 DrawBoundingBox(bounds, GREEN);
             EndMode3D();
-            oss << "Current player turn: " << (gs.currentPlayerTurn + 1);
+            // oss << "Current player turn: " << (gs.currentPlayerTurn + 1);
+            if (true || IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            {
+                const auto mouseRay = GetMouseRay(GetMousePosition(), camera);
+                for(const BoundingBox boundingBox : boxes) {
+                    if(GetRayCollisionBox(mouseRay, boundingBox).hit) {
+                        const ur::coord selectedBoardSpace = boundingBoxToBoardSpaceMap[boundingBox];
+                        oss << "Selected space:" << selectedBoardSpace << std::endl;
+                    }
+                }
+            }
             DrawText(oss.str().c_str(), 10, 200, 20, LIGHTGRAY);
         EndDrawing();
         //----------------------------------------------------------------------------------
