@@ -61,6 +61,17 @@ libur_proj = subproject('libur')
 libur_dep = libur_proj.get_variable('libur_dep')
 dependencies += libur_dep
 
+
+# for handlign assets, referenced: https://stackoverflow.com/questions/46473646/meson-working-with-data-assets-and-portable-relative-paths
+pkgdatadir = 'assets/'
+conf = configuration_data()
+conf.set_quoted('ASSET_PATH', join_paths(meson.source_root(), meson.current_source_dir(), pkgdatadir))
+conf.set_quoted('WINDOW_TITLE', 'Game of Ur')
+configure_file(
+  output: 'config.hpp',
+  configuration: conf
+)
+
 executable('raylib-meson',
   sources,
   c_args: c_args,

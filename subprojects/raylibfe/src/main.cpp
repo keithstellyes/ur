@@ -7,6 +7,7 @@
 #include "rlgl.h" 
 
 #include "GameState.hpp"
+#include "config.hpp"
 
 // function removed from base library
 // taken from https://github.com/raysan5/raylib/blob/master/examples/models/models_draw_cube_texture.c
@@ -29,6 +30,15 @@ struct BBHashFunction
     }
 };
 
+// enum SelectionType {
+//     BoardSpace, Counter;
+// };
+
+// struct Selection {
+//     SelectionType selectionType:1;
+//     ur::coord selectedCoordinate;
+// };
+
 int main(void)
 {
     // Initialization
@@ -36,7 +46,7 @@ int main(void)
     const int screenWidth = 800;
     const int screenHeight = 450;
 
-    InitWindow(screenWidth, screenHeight, "Game of Ur");
+    InitWindow(screenWidth, screenHeight, WINDOW_TITLE);
 
     // Define the camera to look into our 3d world
     Camera3D camera = { 0 };
@@ -46,12 +56,12 @@ int main(void)
     camera.fovy = 45.0f;                                // Camera field-of-view Y
     camera.projection = CAMERA_PERSPECTIVE;             // Camera mode type
 
-    // TODO don't hardcord assets path, but use something like here https://stackoverflow.com/questions/46473646/meson-working-with-data-assets-and-portable-relative-paths
-    const Model boardModel = LoadModel("/home/keith/projects/ur/subprojects/raylibfe/assets/ur-board.obj");
-    const Texture2D boardTexture = LoadTexture("/home/keith/projects/ur/subprojects/raylibfe/assets/balsa.png");
+    const Model boardModel = LoadModel(ASSET_PATH "ur-board.obj");
+
+    const Texture2D boardTexture = LoadTexture(ASSET_PATH "balsa.png");
     boardModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = boardTexture; 
     BoundingBox bounds = GetMeshBoundingBox(boardModel.meshes[0]); 
-    const Texture2D rosetteTexture = LoadTexture("/home/keith/projects/ur/subprojects/raylibfe/assets/rosette.png");
+    const Texture2D rosetteTexture = LoadTexture(ASSET_PATH "rosette.png");
 
     // assumes x on the model is x of the logical ur game board, and z on the model is y of the logical ur game board
     const int spaceLength = ((bounds.max.x - bounds.min.x) / 3);
@@ -60,11 +70,14 @@ int main(void)
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
     ur::GameState gs;
+    
+    // probably want a map with a const BoundingBox key, and a Selection struct value
     std::unordered_map<const BoundingBox, ur::coord, BBHashFunction> boundingBoxToBoardSpaceMap;
     std::vector<BoundingBox> boxes;
     for(const auto& rosette : gs.settingsPtr->rosettes) {
         BoundingBox bb;
         // don't understand why we have to halve for the mins, but if it works it works...
+        // there was some other time I think I had to consider having to half the spaceLength? so I guess it would make sense
         bb.min.x = bounds.min.x + (spaceLength / 2 + spaceLength * rosette.x) - spaceLength / 2;
         bb.min.y = bounds.max.y - spaceLength / 20;
         bb.min.z = bounds.min.z + (spaceLength / 2 + spaceLength * rosette.y) - spaceLength / 2;
@@ -74,14 +87,12 @@ int main(void)
         boundingBoxToBoardSpaceMap[bb] = rosette;
         boxes.push_back(bb);
     }
-    // Main game loop
-    while (!WindowShouldClose())    // Detect window close button or ESC key
+
+    while (!WindowShouldClose())
     {
-        // Update
         std::ostringstream oss;
-        
-        // Draw
-        //----------------------------------------------------------------------------------
+
+        // TODO separate thread for drawing
         BeginDrawing();
 
             ClearBackground(RAYWHITE);
@@ -110,13 +121,9 @@ int main(void)
             }
             DrawText(oss.str().c_str(), 10, 200, 20, LIGHTGRAY);
         EndDrawing();
-        //----------------------------------------------------------------------------------
     }
 
-    // De-Initialization
-    //--------------------------------------------------------------------------------------
-    CloseWindow();        // Close window and OpenGL context
-    //--------------------------------------------------------------------------------------
+    CloseWindow();
 
     return 0;
 }
