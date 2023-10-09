@@ -1,5 +1,7 @@
 # Overview
 
+![Screenshot](./screenshot.png)
+
 I haven't made a full game in a long while, and had mostly done it in environments like Unity and Unreal, and wanted to try something like raylib, now
 that I have a lot more experience in software and such.
 
@@ -8,6 +10,11 @@ And so, the main goal is to have a complete, non-trivial project, and not necess
 I decided to implement *The Game of Ur*, generally considered the oldest board game we know the rules to (more or less).
 
 This project uses C++, Raylib for the audiovisual engine (curses for a terminal frontend), and meson for the build system.
+
+There are some rough-edges, in particular meson build files have an inconsistent style as I did not know meson when I first started this.
+Eventually, I plan to go back to clean this part up, and others.
+
+The project is pretty much "done" but various cleanup work could be done, but would be beyond the scope of the original intentions of the project.
 
 # Rules
 We use the rules from https://www.mastersofgames.com/rules/royal-ur-rules.htm, with the attached PDF for clarification :)
@@ -28,9 +35,13 @@ This project uses git submodules! (for raylib). This should work on most desktop
 
 Once all dependencies are installed, a simple `meson setup build && cd build && ninja` should be sufficient to build the binaries
 
+To set different options for the raylib front end, e.g. a custom window title, do:
+
+`meson setup build -Draylibfe:WINDOW_TITLE="Custom title" && cd build && ninja`
+
 # Structure
 
-This project is structured as a series of submodules, some with dependencies on each other
+This project is structured as a series of submodules, some with dependencies on others.
 
 ## External subprojects
 
@@ -50,8 +61,16 @@ it gets the job done for something easy to get running to get a visual look at g
 
 ## `raylibfe` subproject
 
-This is very much WIP and is very much the star of the show, to have audiovisual capabilities beyond a simple terminal interface.
+The actual "Game" part of it. The 3D graphical frontend that is primarily focused on. It's not the prettiest.
 
 ## `ai` subproject
 
-Haven't started yet, I don't intend on anything sophisticated here, and will probably just be a classical AI, given a low branch rate in the game state
+A class structure allowing for different types of AI's. 2 are implemented; "Random AI" which simply makes random moves, and "Oracle AI" which
+is a classical AI implementing the alpha-beta pruning algoreithm.
+
+# Credits
+
+The tile textures were pulled from the PDF in this project. The board model was created by me (Keith Stellyes) in Blender. 
+The board texture was created by Joseph Francis and downloaded from Wikimedia Commons: https://commons.wikimedia.org/wiki/File:Balsa_Wood_Texture.jpg
+
+See individual source files that use various online examples

@@ -19,6 +19,15 @@ GameState::GameState()
     this->waitingOnBinaryLot = true;
 }
 
+GameState::GameState(const GameState &gameState)
+{
+    this->settingsPtr = gameState.settingsPtr;
+    this->counters = std::vector<coord>(gameState.counters);
+    this->piecesThatMayMove = std::vector<bool>(gameState.piecesThatMayMove);
+    this->waitingOnBinaryLot = gameState.waitingOnBinaryLot;
+}
+
+
 std::ostream& operator<<(std::ostream &os, const GameState &gs)
 {
     for(int y = 0; y < gs.settingsPtr->rowCount; y++) {
@@ -107,8 +116,9 @@ bool GameState::onBinaryLot(unsigned int binaryLotResult)
         if(index == 0) {
             continue; // we handle these in the previous loop
         }
-        if(index + spacesToMove < path->size()) {
-            coord destSpace = (*path)[index + spacesToMove];
+        unsigned int nextIndex = index + spacesToMove;
+        if(nextIndex < path->size()) {
+            coord destSpace = (*path)[nextIndex];
             if(this->settingsPtr->isRosette(destSpace)) {
                 // don't think we can capture enemy pawns here (can they share?)
                 this->piecesThatMayMove[i] = true;
@@ -284,7 +294,12 @@ int GameState::playerOffset(unsigned int player) const
 
 int GameState::pathIndex(int pieceIndex) const
 {
-    coord c = this->counters[pieceIndex + this->currPlayerCounterOffset()];
+    return this->pathIndex(pieceIndex, currentPlayerTurn);
+}
+
+int GameState::pathIndex(int pieceIndex, unsigned int player) const
+{
+    coord c = this->counters[pieceIndex + this->playerOffset(player)];
     const auto& path = this->settingsPtr->paths[this->currentPlayerTurn];
      
     return std::distance(path->begin(), std::find(path->begin(), path->end(), c));

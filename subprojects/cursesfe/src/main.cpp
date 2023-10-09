@@ -8,14 +8,13 @@
 #include "GameState.hpp"
 #include "BinaryLotMachine.hpp"
 
-void drawPiecesWaitingToEnter(const ur::GameState& gs);
 int drawBoardOutline(const ur::GameState& gs);
 void drawStats(const ur::GameState& gs, int xBegin);
 void drawStatus(const ur::GameState& gs, int xBegin);
 void drawPieceCounts(const ur::GameState& gs);
 void drawPieceCountForPlayer(const ur::GameState& gs, unsigned int player);
 
-int main(int argc, char **argv)
+int main()
 {
     ur::GameState gs;
     ur::BinaryLotMachine blm;
@@ -114,7 +113,7 @@ void drawStatus(const ur::GameState& gs, int xBegin)
         mvaddstr(7, xBegin, std::format("Player {} may move {} spaces", player + 1, gs.settingsPtr->decodeBinaryLot(gs.binaryLotResult)).c_str());
         mvaddstr(9, xBegin, "Pieces that may move:");
         int y = 10;
-        for(int i = 0; i < gs.piecesThatMayMove.size(); i++) {
+        for(unsigned int i = 0; i < gs.piecesThatMayMove.size(); i++) {
             if(gs.piecesThatMayMove[i]) {
                 const ur::coord& pieceCoord = gs.getNthPieceByPlayer(i, player);
                 const char *loc;
@@ -143,7 +142,7 @@ int drawBoardOutline(const ur::GameState& gs)
     const char BOX_TOP[] = "+---+";
 
     for(const auto& path : gs.settingsPtr->paths) {
-        for(int i = 1; i < path->size() - 1; i++) {
+        for(unsigned int i = 1; i < path->size() - 1; i++) {
             const ur::coord c = (*path)[i];
             maxRenderedX = std::max(maxRenderedX, ((int)(c.x * 4 + sizeof(BOX_TOP))));
             mvaddstr(c.y * 2, c.x * (sizeof(BOX_TOP) - 2),     BOX_TOP);
@@ -155,9 +154,4 @@ int drawBoardOutline(const ur::GameState& gs)
         }
     }
     return maxRenderedX;
-}
-
-void drawPiecesWaitingToEnter(const ur::GameState& gs)
-{
-    const char MESSAGE[] = "Player {} has {} pieces wa";
 }

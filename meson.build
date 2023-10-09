@@ -4,5 +4,5 @@ project('ur', 'cpp')
 libur_proj = subproject('libur')
 libur_dep = libur_proj.get_variable('libur_dep')
 
-cursesfe_proj = subproject('cursesfe')
+# cursesfe_proj = subproject('cursesfe')
 raylibfe_proj = subproject('raylibfe')

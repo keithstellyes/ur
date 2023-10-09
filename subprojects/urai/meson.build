@@ -1,6 +1,6 @@
 # Referenced from https://github.com/kstenerud/meson-examples/tree/master/library
 project(
-  'libur',
+  'urai',
   'cpp',
   version : '0.0.0',
   default_options : ['warning_level=3', 'cpp_std=c++20']
@@ -9,21 +9,18 @@ project(
 CXX='g++'
 
 project_headers = [
-  'include/BinaryLotmachine.hpp',
-  'include/coord.hpp',
-  'include/GameSettings.hpp',
-  'include/GameState.hpp'
+    'include/Ai.hpp',
+    'include/AiChoice.hpp',
+    'include/OracleAi.hpp',
+    'include/RandomAi.hpp'
 ]
 
 project_source_files = [
-  'src/BinaryLotMachine.cpp',
-  'src/coord.cpp',
-  'src/GameSettings.cpp',
-  'src/GameState.cpp'
+  'src/OracleAi.cpp', 'src/Ai.cpp', 'src/RandomAi.cpp'
 ]
 
 project_test_files = [
-  'tests/src/tests.cpp',
+  'tests/tests.cpp',
 ]
 
 build_args = [
@@ -31,21 +28,6 @@ build_args = [
 ]
 
 # ===================================================================
-
-# ======
-# Target
-# ======
-
-public_headers = include_directories('include')
-
-# Only make public interfaces visible
-if target_machine.system() == 'windows' or target_machine.system() == 'cygwin'
-  build_args += '-DMYLIB_PUBLIC="__declspec(dllexport)"'
-else
-  build_args += '-DMYLIB_PUBLIC=__attribute__((visibility("default")))'
-endif
-
-link_args = []
 
 if host_machine.system() == 'emscripten'
   build_args += [
@@ -57,6 +39,23 @@ if host_machine.system() == 'emscripten'
   ]
 endif
 
+# ======
+# Target
+# ======
+
+public_headers = include_directories('include')
+
+libur_proj = subproject('libur')
+libur_dep = libur_proj.get_variable('libur_dep')
+dependencies = [libur_dep]
+
+# Only make public interfaces visible
+if target_machine.system() == 'windows' or target_machine.system() == 'cygwin'
+  build_args += '-DMYLIB_PUBLIC="__declspec(dllexport)"'
+else
+  build_args += '-DMYLIB_PUBLIC=__attribute__((visibility("default")))'
+endif
+
 project_target = static_library(
   meson.project_name(),
   project_source_files,
@@ -64,6 +63,7 @@ project_target = static_library(
   cpp_args : build_args,
   gnu_symbol_visibility : 'hidden',
   include_directories : public_headers,
+  dependencies: dependencies
 )
 
 # =======
@@ -89,7 +89,7 @@ gtest_main_dep = gtest_proj.get_variable('gtest_main_dep')
     executable(
       'run_tests',
       files(project_test_files),
-      dependencies : [project_dep, gtest_dep, gtest_main_dep],
+      dependencies : dependencies + [project_dep, gtest_dep, gtest_main_dep],
       install : false
     )
   )

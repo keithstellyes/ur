@@ -12,10 +12,7 @@
 namespace ur {
 
 class GameState {
-private:
-    int currPlayerCounterOffset() const;
-    int otherPlayerCounterOffset() const;
-    
+private:    
     void nextPlayer();
 public:
     std::shared_ptr<GameSettings> settingsPtr;
@@ -28,6 +25,7 @@ public:
     // only applies to pieces for the current player
     std::vector<bool> piecesThatMayMove;
     GameState();
+    GameState(const GameState &gameState);
 
     //// game steps
     //// true on was valid move, false otherwise
@@ -44,9 +42,12 @@ public:
     // given a pieceIndex, return the coords of its destination if it can move
     coord pieceDestination(int pieceIndex) const;
     int pathIndex(int pieceIndex) const;
+    int pathIndex(int pieceIndex, unsigned int player) const;
     int finishedPieceCount(unsigned int player) const;
     int pieceWaitingToEnterCount(unsigned int player) const;
     coord getNthPieceByPlayer(int pieceIndex, unsigned int player) const;
+    int currPlayerCounterOffset() const;
+    int otherPlayerCounterOffset() const;
     int playerOffset(unsigned int player) const;
     friend std::ostream& operator<<(std::ostream &os, const GameState &gs);
 };

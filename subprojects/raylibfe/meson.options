@@ -1,0 +1,3 @@
+option('WINDOW_TITLE', type : 'string', value : 'Game of Ur', description : 'An option')
+# asset_path = meson.source_root() + '/' + meson.current_source_dir() + '/assets/'
+option('ASSET_PATH', type : 'string')
